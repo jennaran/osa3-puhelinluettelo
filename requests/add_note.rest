@@ -1,7 +1,7 @@
-POST http://localhost:3001/api/persons
+POST https://peaceful-cove-78964.herokuapp.com/api/persons
 Content-Type: application/json
 
 {
-    "name": "Art",
+    "name": "Testi",
     "number": "12345"
 }
