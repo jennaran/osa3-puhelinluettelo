@@ -1,13 +1,13 @@
-require('dotenv').config()
 const express = require('express')
 const app = express()
-const morgan = require('morgan')
-const cors = require('cors')
+const bodyParser = require('body-parser')
+require('dotenv').config()
 const Person = require('./models/person')
 
-app.use(cors())
-app.use(express.static('build'))
-app.use(express.json())
+const morgan = require('morgan')
+const cors = require('cors')
+
+app.use(bodyParser.json())
 
 morgan.token('body', function(req, res) {
     return JSON.stringify(req.body)
@@ -23,6 +23,10 @@ app.use(morgan(function (tokens, req, res) {
       tokens.body(req, res)
     ].join(' ')
   }))
+
+app.use(cors())
+app.use(express.json())
+app.use(express.static('build'))
 
 
 /*
@@ -108,16 +112,24 @@ app.post('/api/persons', (req, res, next) => {
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
-    const body = req.body
+    const {body} = req
+
+    if(!body.name || !body.number) {
+        return res.status(400).json({
+            error: 'name or number missing'
+        })
+    }
 
     const person = {
         name: body.name,
         number: body.number
     }
-
-    Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    
+    Person.findByIdAndUpdate(req.params.id, person, {
+        new: true, runValidators: true, context: 'query'
+      })
         .then(updatedPerson => {
-            res.json(updatedPerson)
+            res.json(updatedPerson.toJSON())
         })
         .catch(error => next(error))
 })
